@@ -1,9 +1,11 @@
 import Web3 from 'web3'
 import { newKitFromWeb3 } from '@celo/contractkit'
 import BigNumber from "bignumber.js"
+import storageAbi from "./contract/storage.abi.json"
 
 import { useState,useEffect } from 'react'
 const ERC20_DECIMALS = 18
+const MPContractAddress = "0x7EF2e0048f5bAeDe046f6BF797943daF4ED8CB47"
 
 function App() {
 
@@ -28,11 +30,9 @@ function App() {
 
         kit.defaultAccount = user_address;
         await setAddress(user_address);
-        console.log(user_address);
-        console.log(celoBalance)
         await setKit(kit);
         // console.log(kit)
-
+      
       } catch (error) {
         alert(`⚠️ ${error}.`)
       }
@@ -50,12 +50,16 @@ function App() {
       const balance = await kit.getTotalBalance(address);
       const celoBalance = balance.CELO.shiftedBy(-ERC20_DECIMALS).toFixed(2);
       const USDBalance = balance.cUSD.shiftedBy(-ERC20_DECIMALS).toFixed(2);
-  
+      
+      const contract = new kit.web3.eth.Contract(storageAbi, MPContractAddress)
+      setcontract(contract)
   
       setCeloBalance(celoBalance);
       setcUSDBalance(USDBalance);
     };
     
+
+
     useEffect(() => {
       console.log({kit,address})
       if (kit && address) {
@@ -65,7 +69,17 @@ function App() {
       }
     }, [kit, address]);
   
+    useEffect(() => {
+      if(contract) {
+        getStorage()
+      }
+    },[contract])
 
+    const getStorage = async () => {
+      const num = await contract.methods.retrieve().call()
+      console.log(num)
+    }
+    
   return (
     <div className="App">
       <div>
